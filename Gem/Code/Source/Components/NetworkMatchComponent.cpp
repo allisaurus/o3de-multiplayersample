@@ -8,6 +8,7 @@
 #include <MultiplayerSampleTypes.h>
 #include <UiGameOverBus.h>
 #include <Source/Components/Multiplayer/MatchPlayerCoinsComponent.h>
+//#include <Source/Components/Multiplayer/PlayerArmorComponent.h>
 #include <Source/Components/Multiplayer/PlayerIdentityComponent.h>
 #include <Source/Components/NetworkMatchComponent.h>
 
@@ -22,6 +23,13 @@ namespace MultiplayerSample
                 ->Version(1);
         }
         NetworkMatchComponentBase::Reflect(context);
+    }
+
+    NetworkMatchComponent::NetworkMatchComponent()
+        : NetworkMatchComponentBase()
+        , m_playerArmorZeroHandler([this](float deathMsg) { OnPlayerArmorZero(deathMsg); })
+    {
+        ;
     }
 
     void NetworkMatchComponent::OnActivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
@@ -55,6 +63,11 @@ namespace MultiplayerSample
             UiGameOverBus::Broadcast(&UiGameOverBus::Events::SetGameOverScreenEnabled, true);
             UiGameOverBus::Broadcast(&UiGameOverBus::Events::DisplayResults, results);
         }
+    }
+
+    void NetworkMatchComponent::OnPlayerArmorZero(float value)
+    {
+        AZ_TracePrintf("NetworkMatchComponent", "player death seen: %f.\n", value);
     }
 
     // Controller methods
@@ -146,11 +159,20 @@ namespace MultiplayerSample
     void NetworkMatchComponentController::HandleRPC_PlayerActivated([[maybe_unused]] AzNetworking::IConnection* invokingConnection,
         const Multiplayer::NetEntityId& playerEntity)
     {
+        AZ_TracePrintf("NetworkMatchComponentController", "HandleRPC_PlayerActivated called...\n", "...");
         const auto playerIterator = AZStd::find(m_players.begin(), m_players.end(), playerEntity);
         if (playerIterator == m_players.end())
         {
             m_players.push_back(playerEntity);
             AssignPlayerIdentity(playerEntity);
+
+            AZ_TracePrintf("NetworkMatchComponentController", "assigning player...\n", "...");
+            const auto playerHandle = Multiplayer::GetNetworkEntityManager()->GetEntity(playerEntity);
+            if (PlayerArmorComponent* armor = playerHandle.GetEntity()->FindComponent<PlayerArmorComponent>())
+            {
+                AZ_TracePrintf("NetworkMatchComponentController", "calling BindArmorZeroEventHandler...\n", "...");
+                armor->BindArmorZeroEventHandler(GetParent().m_playerArmorZeroHandler);
+            }
         }
     }
 
@@ -196,4 +218,6 @@ namespace MultiplayerSample
 
         m_nextPlayerId++;
     }
+
+    
 }

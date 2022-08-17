@@ -11,6 +11,28 @@
 
 namespace MultiplayerSample
 {
+    using ArmorZeroEvent = AZ::Event<float>;
+
+    class PlayerArmorComponent
+        : public PlayerArmorComponentBase
+    {
+    public:
+        AZ_MULTIPLAYER_COMPONENT(MultiplayerSample::PlayerArmorComponent, s_playerArmorComponentConcreteUuid, MultiplayerSample::PlayerArmorComponentBase);
+
+        
+
+        static void Reflect(AZ::ReflectContext* context);
+
+        void OnInit() override;
+        void OnActivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
+        void OnDeactivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
+
+        void SignalArmorZeroEvent();
+        void BindArmorZeroEventHandler(ArmorZeroEvent::Handler handler);
+
+        ArmorZeroEvent m_armorZeroEvent;
+    };
+
     class PlayerArmorComponentController
         : public PlayerArmorComponentControllerBase
     {

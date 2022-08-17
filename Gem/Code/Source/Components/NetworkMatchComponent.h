@@ -8,6 +8,7 @@
 #pragma once
 
 #include <PlayerIdentityBus.h>
+#include <Source/Components/Multiplayer/PlayerArmorComponent.h>
 #include <AzCore/EBus/ScheduledEvent.h>
 #include <Source/AutoGen/NetworkMatchComponent.AutoComponent.h>
 
@@ -21,6 +22,8 @@ namespace MultiplayerSample
         AZ_MULTIPLAYER_COMPONENT(MultiplayerSample::NetworkMatchComponent, s_networkMatchComponentConcreteUuid, MultiplayerSample::NetworkMatchComponentBase);
 
         static void Reflect(AZ::ReflectContext* context);
+
+        NetworkMatchComponent();
         
         void OnActivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
         void OnDeactivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
@@ -33,6 +36,9 @@ namespace MultiplayerSample
 
         void HandleRPC_EndMatch(
             AzNetworking::IConnection* invokingConnection, const MatchResultsSummary& results) override;
+
+        void OnPlayerArmorZero(float value);
+        ArmorZeroEvent::Handler m_playerArmorZeroHandler;
     };
 
     class NetworkMatchComponentController
@@ -63,5 +69,9 @@ namespace MultiplayerSample
         //! A temporary way to assign player identities, such as player names.
         void AssignPlayerIdentity(Multiplayer::NetEntityId playerEntity);
         int m_nextPlayerId = 1;
+
+        //! Respond to player armor depletion
+        
+        
     };
 }

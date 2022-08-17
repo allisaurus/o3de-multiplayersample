@@ -11,6 +11,43 @@
 
 namespace MultiplayerSample
 {
+    void PlayerArmorComponent::Reflect(AZ::ReflectContext* context)
+    {
+        AZ::SerializeContext* serializeContext = azrtti_cast<AZ::SerializeContext*>(context);
+        if (serializeContext)
+        {
+            serializeContext->Class<PlayerArmorComponent, PlayerArmorComponentBase>()
+                ->Version(1);
+        }
+        PlayerArmorComponentBase::Reflect(context);
+    }
+
+    void PlayerArmorComponent::OnInit()
+    {
+    }
+
+    void PlayerArmorComponent::OnActivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
+    {
+    }
+
+    void PlayerArmorComponent::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
+    {
+    }
+
+    void PlayerArmorComponent::SignalArmorZeroEvent()
+    {
+        AZ_TracePrintf("PlayerArmorComponent", "SignalArmorZeroEvent was invoked! \n", "...");
+        m_armorZeroEvent.Signal(5.0f);
+    }
+
+    void PlayerArmorComponent::BindArmorZeroEventHandler(ArmorZeroEvent::Handler handler)
+    {
+        AZ_TracePrintf("PlayerArmorComponent", "...BindArmorZeroEventHandler called!\n", "...");
+        handler.Connect(m_armorZeroEvent);
+    }
+
+    // controller methods
+
     PlayerArmorComponentController::PlayerArmorComponentController(PlayerArmorComponent& parent)
         : PlayerArmorComponentControllerBase(parent)
     {
@@ -37,5 +74,10 @@ namespace MultiplayerSample
     void PlayerArmorComponentController::OnAmountChanged(float armor)
     {
         UiPlayerArmorNotificationBus::Broadcast(&UiPlayerArmorNotificationBus::Events::OnPlayerArmorChanged, armor, GetStartingArmor());
+        if (armor <= 0)
+        {
+            AZ_TracePrintf("PlayerArmorComponentController", "ARMOR is below zero...\n", "...");
+            GetParent().SignalArmorZeroEvent();
+        }
     }
 }

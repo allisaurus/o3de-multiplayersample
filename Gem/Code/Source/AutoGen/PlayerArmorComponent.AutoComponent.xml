@@ -3,7 +3,7 @@
 <Component
     Name="PlayerArmorComponent"
     Namespace="MultiplayerSample"
-    OverrideComponent="false"
+    OverrideComponent="true"
     OverrideController="true"
     OverrideInclude="Source/Components/Multiplayer/PlayerArmorComponent.h"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
