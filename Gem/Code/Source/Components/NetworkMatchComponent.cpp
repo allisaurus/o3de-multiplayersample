@@ -37,11 +37,13 @@ namespace MultiplayerSample
         if (IsNetEntityRoleAuthority() || IsNetEntityRoleServer())
         {
             PlayerIdentityNotificationBus::Handler::BusConnect();
+            PlayerMatchLifecycleBus::Handler::BusConnect();
         }
     }
 
     void NetworkMatchComponent::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
+        PlayerMatchLifecycleBus::Handler::BusDisconnect();
         PlayerIdentityNotificationBus::Handler::BusDisconnect();
     }
 
@@ -53,6 +55,12 @@ namespace MultiplayerSample
     void NetworkMatchComponent::OnPlayerDeactivated(Multiplayer::NetEntityId playerEntity)
     {
         RPC_PlayerDeactivated(playerEntity);
+    }
+
+    void NetworkMatchComponent::OnPlayerArmorZero(Multiplayer::NetEntityId playerEntity)
+    {
+        AZ_TracePrintf("NetworkMatchComponent", "call OnPlayerArmorZero for player: %f\n", playerEntity);
+        RPC_PlayerArmorZero(playerEntity);
     }
 
     void NetworkMatchComponent::HandleRPC_EndMatch(
@@ -93,12 +101,11 @@ namespace MultiplayerSample
 
         GameState::GameStateRequests::CreateAndPushNewOverridableGameStateOfType<GameStateWaitingForPlayers>();
 
-        PlayerMatchLifecycleBus::Handler::BusConnect();
+        
     }
 
     void NetworkMatchComponentController::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
-        PlayerMatchLifecycleBus::Handler::BusDisconnect();
 
         GameState::GameStateRequestBus::Broadcast(&GameState::GameStateRequestBus::Events::PopAllGameStates);
 
@@ -109,6 +116,8 @@ namespace MultiplayerSample
 
         m_roundTickEvent.RemoveFromQueue();
     }
+
+    
 
     void NetworkMatchComponentController::StartMatch()
     {
@@ -200,8 +209,10 @@ namespace MultiplayerSample
         }
     }
 
-    void NetworkMatchComponentController::OnPlayerArmorZero(Multiplayer::NetEntityId playerEntity)
+    void NetworkMatchComponentController::HandleRPC_PlayerArmorZero(
+        [[maybe_unused]] AzNetworking::IConnection* invokingConnection, const Multiplayer::NetEntityId& playerEntity)
     {
+        AZ_TracePrintf("NetworkMatchComponentController", "HandleRPC_PlayerArmorZero for player: %f\n", playerEntity);
         const auto playerIterator = AZStd::find(m_players.begin(), m_players.end(), playerEntity);
         const auto playerHandle = Multiplayer::GetNetworkEntityManager()->GetEntity(playerEntity);
         if ((playerIterator != m_players.end()) && playerHandle.Exists())
@@ -212,7 +223,6 @@ namespace MultiplayerSample
         {
             AZ_Warning("NetworkMatchComponentController", false, "An unknown player reported depleted armor: %llu", aznumeric_cast<AZ::u64>(playerEntity));
         }
-        
     }
 
     void NetworkMatchComponentController::RoundTickOnceASecond()

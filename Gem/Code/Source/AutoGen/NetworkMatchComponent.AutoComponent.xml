@@ -38,5 +38,9 @@
                      GenerateEventBindings="false" Description="Handles players deactivation">
         <Param Type="Multiplayer::NetEntityId" Name="PlayerEntity"/>
     </RemoteProcedure>
+    <RemoteProcedure Name="RPC_PlayerArmorZero" InvokeFrom="Server" HandleOn="Authority" IsPublic="false" IsReliable="true"
+                     GenerateEventBindings="false" Description="Handles players health depletion">
+        <Param Type="Multiplayer::NetEntityId" Name="PlayerEntity"/>
+    </RemoteProcedure>
 </Component>
  

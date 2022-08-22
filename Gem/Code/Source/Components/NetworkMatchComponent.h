@@ -17,6 +17,7 @@ namespace MultiplayerSample
     class NetworkMatchComponent
         : public NetworkMatchComponentBase
         , public PlayerIdentityNotificationBus::Handler
+        , public PlayerMatchLifecycleBus::Handler
     {
     public:
         AZ_MULTIPLAYER_COMPONENT(MultiplayerSample::NetworkMatchComponent, s_networkMatchComponentConcreteUuid, MultiplayerSample::NetworkMatchComponentBase);
@@ -31,6 +32,11 @@ namespace MultiplayerSample
         void OnPlayerActivated(Multiplayer::NetEntityId playerEntity) override;
         void OnPlayerDeactivated(Multiplayer::NetEntityId playerEntity) override;
         //! }@
+ 
+        //! PlayerMatchLifecycleBus overrides
+        //! @{
+        void OnPlayerArmorZero(Multiplayer::NetEntityId playerEntity) override;
+        //! )@
 
         void HandleRPC_EndMatch(
             AzNetworking::IConnection* invokingConnection, const MatchResultsSummary& results) override;
@@ -38,7 +44,7 @@ namespace MultiplayerSample
 
     class NetworkMatchComponentController
         : public NetworkMatchComponentControllerBase
-        , public PlayerMatchLifecycleBus::Handler
+        
     {
     public:
         explicit NetworkMatchComponentController(NetworkMatchComponent& parent);
@@ -46,10 +52,7 @@ namespace MultiplayerSample
         void OnActivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
         void OnDeactivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
 
-        //! PlayerMatchLifecycleBus overrides
-        //! @{
-        void OnPlayerArmorZero(Multiplayer::NetEntityId playerEntity) override;
-        //! )@
+        
 
         void StartMatch();
 
@@ -58,6 +61,8 @@ namespace MultiplayerSample
 
         void HandleRPC_PlayerActivated(AzNetworking::IConnection* invokingConnection, const Multiplayer::NetEntityId& playerEntity) override;
         void HandleRPC_PlayerDeactivated(AzNetworking::IConnection* invokingConnection, const Multiplayer::NetEntityId& playerEntity) override;
+
+        void HandleRPC_PlayerArmorZero(AzNetworking::IConnection* invokingConnection, const Multiplayer::NetEntityId& playerEntity) override;
 
     private:
         void RoundTickOnceASecond();
